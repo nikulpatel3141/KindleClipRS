@@ -1,20 +1,28 @@
 use std::fs;
 
+#[macro_use]
+extern crate lazy_static;
+
 use chrono::NaiveDateTime;
 use regex::Regex;
 
-const CLIPPING_FILE: &str = "../My Clippings.txt";
-const QUOTE_DELIMITER_REGEX: &str = r"\n*\s*==========\s*\n*";
-
 // \s+Your Highlight (on page (?P<page>[0-9]+) \||at) location\s+([0-9]+-[0-9]+)\s+\|.*\,\s+(?P<dateStr>[a-zA-Z0-9 :]+)\n+(?P<data>.*)\n+
 
-const QUOTE_REGEX: &str = concat!(
+const CLIPPING_FILE: &str = "../My Clippings.txt";
+
+const _QUOTE_DELIMITER_REGEX: &str = r"\n*\s*==========\s*\n*";
+const _QUOTE_REGEX: &str = concat!(
     r"\n+*(?P<title>.*)\((?P<author>.*)\)\s*",
     r"\n*\s+-\s+Your (?P<clippingType>Highlight|Bookmark|Note) ",
     r"(on page (?P<page>[0-9]+) \||at) location\s+([0-9]+-[0-9]+)\s+\|",
     r".*\,\s+(?P<dateStr>[a-zA-Z0-9 :]+)\s*\n+",
     r"(?P<data>.*)\n+",
 );
+
+lazy_static! {
+    static ref QUOTE_REGEX: Regex = Regex::new(_QUOTE_REGEX).unwrap();
+    static ref QUOTE_DELIMITER_REGEX: Regex = Regex::new(_QUOTE_DELIMITER_REGEX).unwrap();
+}
 
 struct Quote {
     title: String,
@@ -29,23 +37,19 @@ fn parse_highlight_time(highlight_time_str: &str) -> NaiveDateTime {
 }
 
 fn parse_quote_block(quote_block: &str) -> Option<Quote> {
-    // let mut quote_block_lines = quote_block.lines();
-
-    let book_regex = Regex::new(QUOTE_REGEX).unwrap();
-    let book_captures = match book_regex.captures(quote_block) {
+    let book_captures = match QUOTE_REGEX.captures(quote_block) {
         Some(x) => x,
         None => return None,
     };
 
+    let highlight_time = parse_highlight_time(&book_captures["dateStr"]);
+
     println!(
-        "{} {}",
+        "{} {} {}",
         book_captures["title"].to_string(),
-        book_captures["author"].to_string()
+        book_captures["author"].to_string(),
+        highlight_time,
     );
-
-    // let location_date_line = quote_block_lines.next()?;
-
-    // let quote = &quote_block_lines.fold(String::new(), |a, b| a + b + "\n");
 
     // let highlight_time = parse_highlight_time(highlight_time_str);
 
@@ -53,11 +57,9 @@ fn parse_quote_block(quote_block: &str) -> Option<Quote> {
 }
 
 fn main() {
-    println!("{}", QUOTE_REGEX);
     let contents = fs::read_to_string(CLIPPING_FILE).expect("Unable to read input file");
 
-    let quote_re = Regex::new(QUOTE_DELIMITER_REGEX).unwrap();
-    let quote_blocks = quote_re.split(&contents);
+    let quote_blocks = QUOTE_DELIMITER_REGEX.split(&contents);
 
     let x: Vec<Option<Quote>> = quote_blocks.map(|x| parse_quote_block(x)).collect();
 
