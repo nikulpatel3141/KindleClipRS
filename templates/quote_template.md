@@ -11,7 +11,7 @@
 {%- endmatch %}
 {%- endmacro %}
 
-{%- if true -%}
+{%- if true -%} {# clear newlines on ends -#}
 - *{{ clipping_type }}* {% call format_loc(page, location) %}
-{{ quote }}
+`{{ quote }}`
 {%- endif -%}

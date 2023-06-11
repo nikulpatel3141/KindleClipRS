@@ -1,4 +1,8 @@
-use std::{fs, str::FromStr};
+use std::{
+    collections::HashMap,
+    fs::{self, File},
+    str::FromStr,
+};
 
 #[macro_use]
 extern crate lazy_static;
@@ -29,14 +33,14 @@ lazy_static! {
     static ref QUOTE_DELIMITER_REGEX: Regex = Regex::new(_QUOTE_DELIMITER_REGEX).unwrap();
 }
 
-#[derive(Debug, EnumString, Display)]
+#[derive(Debug, EnumString, Display, Clone, Copy)]
 enum ClippingType {
     Bookmark,
     Highlight,
     Note,
 }
 
-#[derive(Debug, Template)]
+#[derive(Debug, Template, Clone)]
 #[template(path = "quote_template.md")]
 struct Clipping {
     title: String,
@@ -59,18 +63,15 @@ fn parse_highlight_time(highlight_time_str: &str) -> Option<NaiveDateTime> {
     NaiveDateTime::parse_from_str(highlight_time_str, DATE_FORMAT).ok()
 }
 
-fn parse_quote_block(quote_block: &str) -> Option<Clipping> {
-    let book_captures = match QUOTE_REGEX.captures(quote_block) {
-        Some(x) => x,
-        None => return None,
-    };
+fn parse_quote_block(quote_block: &str) -> Result<Clipping, ()> {
+    let book_captures = QUOTE_REGEX.captures(quote_block).ok_or(())?;
 
     let clipping_type = match book_captures.name("clippingType") {
         Some(x) => match ClippingType::from_str(x.as_str()) {
             Ok(y) => y,
-            Err(_) => return None,
+            Err(_) => return Err(()),
         },
-        None => return None,
+        None => return Err(()),
     };
 
     let added_date = parse_highlight_time(&book_captures["dateStr"]);
@@ -96,16 +97,47 @@ fn parse_quote_block(quote_block: &str) -> Option<Clipping> {
         added_date,
     };
 
-    println!("{:?}", parsed_quote.render().unwrap());
-    // println!("{:?}", parsed_quote);
+    return Ok(parsed_quote);
+}
 
-    return Some(parsed_quote);
+fn parse_clippings(clipping_text: String) -> Vec<Clipping> {
+    let quote_blocks = QUOTE_DELIMITER_REGEX.split(&clipping_text);
+
+    quote_blocks
+        .map(parse_quote_block)
+        .filter_map(|x| x.ok())
+        .collect()
+}
+
+fn write_parsed_clippings(parsed_clippings: Vec<Clipping>) ->  {
+    let mut grouped_clippings: HashMap<(String, String), Vec<&Clipping>> = HashMap::new();
+
+    for x in parsed_clippings.iter() {
+        grouped_clippings
+            .entry((x.author.to_owned(), x.title.to_owned()))
+            .or_insert(vec![])
+            .push(x)
+    }
+
+    for ((author, title), clippings) in grouped_clippings.iter() {
+        let filename = author;
+        let file_body = clippings
+            .iter()
+            .map(|x| x.render().unwrap())
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        let mut file = File::open(filename)?;
+        file.
+    }
+    return Ok(());
 }
 
 fn main() {
     let contents = fs::read_to_string(CLIPPING_FILE).expect("Unable to read input file");
 
-    let quote_blocks = QUOTE_DELIMITER_REGEX.split(&contents);
+    parse_clippings(contents);
 
-    let x: Vec<Option<Clipping>> = quote_blocks.map(|x| parse_quote_block(x)).collect();
+    // let quote_blocks = QUOTE_DELIMITER_REGEX.split(&contents);
+    // let x: Vec<Result<Clipping>> = quote_blocks.map(|x| parse_quote_block(x)).collect();
 }
