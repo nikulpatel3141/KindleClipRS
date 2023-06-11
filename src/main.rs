@@ -96,8 +96,8 @@ fn parse_quote_block(quote_block: &str) -> Option<Clipping> {
         added_date,
     };
 
-    // println!("{:?}", parsed_quote.render().unwrap());
-    println!("{:?}", parsed_quote);
+    println!("{:?}", parsed_quote.render().unwrap());
+    // println!("{:?}", parsed_quote);
 
     return Some(parsed_quote);
 }
