@@ -14,4 +14,5 @@
 {%- if true -%} {# clear newlines on ends -#}
 - *{{ clipping_type }}* {% call format_loc(page, location) %}
 `{{ quote }}`
-{%- endif -%}
+
+{%~ endif %}

@@ -1,6 +1,8 @@
 use std::{
     collections::HashMap,
     fs::{self, File},
+    io::Write,
+    path::Path,
     str::FromStr,
 };
 
@@ -21,16 +23,17 @@ const DATE_FORMAT: &str = "%d %B %Y %H:%M:%S";
 const _QUOTE_DELIMITER_REGEX: &str = r"\n*\s*==========\s*\n*";
 const _QUOTE_REGEX: &str = concat!(
     r"\n*(?P<title>.*)\s+\((?P<author>.*)\)\s*",
-    r"\n*\s+-\s+Your (?P<clippingType>Highlight|Bookmark|Note) ",
-    r"(on page (?P<page>[0-9]+) \||at)? ",
-    r"location\s+(?P<locStart>[0-9]+)-(?P<locEnd>[0-9]+)\s+\|",
-    r".*\,\s+(?P<dateStr>[a-zA-Z0-9 :]+)\s*[\r\n]+",
-    r"(?P<quote>.*)\n*",
+    r"\n*\s+-\s+Your (?P<clippingType>Highlight|Bookmark|Note)\s*",
+    r"(on page (?P<page>[0-9]+) \||at)?\s*",
+    r"(location\s+(?P<locStart>[0-9]+)-(?P<locEnd>[0-9]+)\s+\|)?",
+    r".*\,\s+(?P<dateStr>[a-zA-Z0-9 :]+)\s*[\r\n]*",
+    r"(?P<quote>.*)?\n*",
 );
 
 lazy_static! {
     static ref QUOTE_REGEX: Regex = Regex::new(_QUOTE_REGEX).unwrap();
     static ref QUOTE_DELIMITER_REGEX: Regex = Regex::new(_QUOTE_DELIMITER_REGEX).unwrap();
+    static ref FILENAME_SANITISE_REGEX: Regex = Regex::new(r#"[/?<>\:*|\"]"#).unwrap();
 }
 
 #[derive(Debug, EnumString, Display, Clone, Copy)]
@@ -87,10 +90,15 @@ fn parse_quote_block(quote_block: &str) -> Result<Clipping, ()> {
         None
     };
 
+    let quote = match book_captures.name("quote") {
+        Some(x) => x.as_str().into(),
+        None => String::new(),
+    };
+
     let parsed_quote = Clipping {
         title: book_captures["title"].to_string(),
         author: book_captures["author"].to_string(),
-        quote: book_captures["quote"].to_string(),
+        quote,
         clipping_type,
         location,
         page,
@@ -109,7 +117,14 @@ fn parse_clippings(clipping_text: String) -> Vec<Clipping> {
         .collect()
 }
 
-fn write_parsed_clippings(parsed_clippings: Vec<Clipping>) ->  {
+fn sanitise_filename(filename: String) -> String {
+    FILENAME_SANITISE_REGEX
+        .replace_all(filename.as_str(), "")
+        .replace("&", "and")
+        .into()
+}
+
+fn write_parsed_clippings(parsed_clippings: Vec<Clipping>) -> Result<(), std::io::Error> {
     let mut grouped_clippings: HashMap<(String, String), Vec<&Clipping>> = HashMap::new();
 
     for x in parsed_clippings.iter() {
@@ -120,15 +135,17 @@ fn write_parsed_clippings(parsed_clippings: Vec<Clipping>) ->  {
     }
 
     for ((author, title), clippings) in grouped_clippings.iter() {
-        let filename = author;
+        let filename = sanitise_filename(format!(r"{} - {}.md", title, author).into());
+        let file_path = Path::new("./clippings").join(filename);
+
         let file_body = clippings
             .iter()
             .map(|x| x.render().unwrap())
             .collect::<Vec<String>>()
             .join("\n");
 
-        let mut file = File::open(filename)?;
-        file.
+        let mut file = File::create(file_path)?;
+        file.write(&file_body.into_bytes())?;
     }
     return Ok(());
 }
@@ -136,7 +153,9 @@ fn write_parsed_clippings(parsed_clippings: Vec<Clipping>) ->  {
 fn main() {
     let contents = fs::read_to_string(CLIPPING_FILE).expect("Unable to read input file");
 
-    parse_clippings(contents);
+    let parsed_clippings = parse_clippings(contents);
+
+    write_parsed_clippings(parsed_clippings).expect("Unable to write clippings");
 
     // let quote_blocks = QUOTE_DELIMITER_REGEX.split(&contents);
     // let x: Vec<Result<Clipping>> = quote_blocks.map(|x| parse_quote_block(x)).collect();
