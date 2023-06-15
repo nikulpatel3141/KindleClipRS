@@ -11,6 +11,8 @@ extern crate lazy_static;
 
 use askama::Template;
 use chrono::NaiveDateTime;
+use env_logger::{self, Builder};
+use log::{info, LevelFilter};
 use regex::Regex;
 use strum_macros::{Display, EnumString};
 
@@ -19,6 +21,8 @@ use strum_macros::{Display, EnumString};
 const CLIPPING_FILE: &str = "../My Clippings.txt";
 
 const DATE_FORMAT: &str = "%d %B %Y %H:%M:%S";
+
+const OUTPUT_DIRECTORY: &str = "clippings/";
 
 const _QUOTE_DELIMITER_REGEX: &str = r"\n*\s*==========\s*\n*";
 const _QUOTE_REGEX: &str = concat!(
@@ -109,12 +113,23 @@ fn parse_quote_block(quote_block: &str) -> Result<Clipping, ()> {
 }
 
 fn parse_clippings(clipping_text: String) -> Vec<Clipping> {
-    let quote_blocks = QUOTE_DELIMITER_REGEX.split(&clipping_text);
+    let quote_blocks: Vec<&str> = QUOTE_DELIMITER_REGEX.split(&clipping_text).collect();
 
-    quote_blocks
-        .map(parse_quote_block)
+    let num_clippings = quote_blocks.len();
+
+    let parsed_quotes: Vec<Clipping> = quote_blocks
+        .iter()
+        .map(|x| parse_quote_block(*x))
         .filter_map(|x| x.ok())
-        .collect()
+        .collect();
+
+    info!(
+        "Parsed {} out of {} clippings",
+        parsed_quotes.len(),
+        num_clippings
+    );
+
+    parsed_quotes
 }
 
 fn sanitise_filename(filename: String) -> String {
@@ -134,9 +149,23 @@ fn write_parsed_clippings(parsed_clippings: Vec<Clipping>) -> Result<(), std::io
             .push(x)
     }
 
+    let output_directory = Path::new(OUTPUT_DIRECTORY);
+
+    info!(
+        "Attempting to write clippings to {}",
+        output_directory.display()
+    );
+
     for ((author, title), clippings) in grouped_clippings.iter() {
         let filename = sanitise_filename(format!(r"{} - {}.md", title, author).into());
-        let file_path = Path::new("./clippings").join(filename);
+        let file_path = output_directory.join(filename);
+
+        info!(
+            "Writing {:3} clippings for {}, {}",
+            clippings.len(),
+            title,
+            author
+        );
 
         let file_body = clippings
             .iter()
@@ -151,6 +180,8 @@ fn write_parsed_clippings(parsed_clippings: Vec<Clipping>) -> Result<(), std::io
 }
 
 fn main() {
+    Builder::new().filter_level(LevelFilter::Info).init(); // FIXME: improve logging format
+
     let contents = fs::read_to_string(CLIPPING_FILE).expect("Unable to read input file");
 
     let parsed_clippings = parse_clippings(contents);
