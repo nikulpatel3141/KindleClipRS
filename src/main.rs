@@ -1,8 +1,10 @@
+use core::panic;
 use std::{
     collections::HashMap,
     fs::{self, File},
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
+    process::Command,
     str::FromStr,
 };
 
@@ -18,7 +20,7 @@ use strum_macros::{Display, EnumString};
 
 // \s+Your Highlight (on page (?P<page>[0-9]+) \||at) location\s+([0-9]+-[0-9]+)\s+\|.*\,\s+(?P<dateStr>[a-zA-Z0-9 :]+)\n+(?P<data>.*)\n+
 
-const CLIPPING_FILE: &str = "../My Clippings.txt";
+const CLIPPING_FILE: &str = "documents/My Clippings.txt";
 
 const DATE_FORMAT: &str = "%d %B %Y %H:%M:%S";
 
@@ -57,6 +59,47 @@ struct Clipping {
     page: Option<i32>,
     added_date: Option<NaiveDateTime>,
     quote: String,
+}
+
+fn find_clipping_file() -> PathBuf {
+    let find_kindle_mount_command = "/usr/bin/env";
+
+    let shell_output = Command::new(find_kindle_mount_command)
+        .arg("bash")
+        .arg("-c")
+        .arg("cat /proc/mounts | awk '{print $2}' | grep Kindle")
+        .output()
+        .expect("Failed to find Kindle mount point");
+
+    assert!(shell_output.status.success());
+
+    let mount_points: Vec<String> = String::from_utf8_lossy(&shell_output.stdout)
+        .split("\n")
+        .map(|x| x.trim().to_string())
+        .filter(|x| x.len() > 0)
+        .collect();
+
+    println!("{}, {}", mount_points.clone().join(" "), mount_points.len());
+
+    let mount_point = match mount_points.len() {
+        0 => panic!("Found no Kindles mounted on the system"),
+        1 => {
+            info!("Found a Kindle mounted on {}", mount_points[0]);
+            mount_points[0].clone()
+        }
+        _ => panic!("Found multiple mount points: {}", mount_points.join(", ")),
+    };
+
+    let clipping_file = Path::new(mount_point.as_str()).join(CLIPPING_FILE);
+
+    assert!(clipping_file.is_file());
+    info!("Found clippings file {}", clipping_file.display());
+
+    clipping_file
+}
+
+fn parse_command_line_args() -> () {
+    // Need option to pass custom clippings file, otherwise use find_clipping_file
 }
 
 fn parse_optional_int(capture_group: Option<regex::Match>) -> Option<i32> {
@@ -182,12 +225,11 @@ fn write_parsed_clippings(parsed_clippings: Vec<Clipping>) -> Result<(), std::io
 fn main() {
     Builder::new().filter_level(LevelFilter::Info).init(); // FIXME: improve logging format
 
-    let contents = fs::read_to_string(CLIPPING_FILE).expect("Unable to read input file");
+    let clipping_file = find_clipping_file();
+
+    let contents = fs::read_to_string(clipping_file).expect("Unable to read input file");
 
     let parsed_clippings = parse_clippings(contents);
 
     write_parsed_clippings(parsed_clippings).expect("Unable to write clippings");
-
-    // let quote_blocks = QUOTE_DELIMITER_REGEX.split(&contents);
-    // let x: Vec<Result<Clipping>> = quote_blocks.map(|x| parse_quote_block(x)).collect();
 }
