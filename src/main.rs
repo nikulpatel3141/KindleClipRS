@@ -1,8 +1,6 @@
-use core::{fmt, panic};
 use std::{
     collections::HashMap,
-    fmt::Display,
-    fs::{self, File},
+    fs::{self, create_dir, File},
     io::Write,
     path::{Path, PathBuf},
     process::Command,
@@ -17,11 +15,9 @@ use chrono::NaiveDateTime;
 use clap::Parser;
 use dialoguer::Confirm;
 use env_logger::{self, Builder};
-use log::{info, LevelFilter};
+use log::{error, info, LevelFilter};
 use regex::Regex;
 use strum_macros::{Display, EnumString};
-
-// \s+Your Highlight (on page (?P<page>[0-9]+) \||at) location\s+([0-9]+-[0-9]+)\s+\|.*\,\s+(?P<dateStr>[a-zA-Z0-9 :]+)\n+(?P<data>.*)\n+
 
 const CLIPPING_FILE: &str = "documents/My Clippings.txt";
 
@@ -168,7 +164,7 @@ fn parse_quote_block(quote_block: &str) -> Result<Clipping, ()> {
 fn parse_clippings(clipping_text: String) -> Vec<Clipping> {
     let quote_blocks: Vec<&str> = QUOTE_DELIMITER_REGEX.split(&clipping_text).collect();
 
-    let num_clippings = quote_blocks.len();
+    let num_clippings = quote_blocks.len() - 1;
 
     let parsed_quotes: Vec<Clipping> = quote_blocks
         .iter()
@@ -208,6 +204,15 @@ fn write_parsed_clippings(parsed_clippings: Vec<Clipping>) -> Result<(), std::io
         "Attempting to write clippings to {}",
         output_directory.display()
     );
+
+    if !output_directory.try_exists().unwrap() {
+        info!(
+            "Output directory {} doesn't exist, attempting to create it",
+            output_directory.display()
+        );
+        create_dir(output_directory).unwrap();
+        info!("Created output directory {}", output_directory.display());
+    }
 
     for ((author, title), clippings) in grouped_clippings.iter() {
         let filename = sanitise_filename(format!(r"{} - {}.md", title, author).into());
@@ -264,10 +269,21 @@ fn main() -> Result<(), ()> {
                     Some(y) => y,
                     None => return Ok(()),
                 },
-                None => panic!("No clippings files detected, exiting!"),
+                None => {
+                    error!(
+                        "No clippings files detected, mount a Kindle device \
+                        or explicitly pass a clippings file to parse"
+                    );
+                    return Err(());
+                }
             }
         }
     };
+
+    info!(
+        "Attempting to parse clippings file {}",
+        clipping_file.display()
+    );
 
     let contents = fs::read_to_string(clipping_file.clone())
         .unwrap_or_else(|_| panic!("Unable to read input file {}", clipping_file.display()));
