@@ -2,12 +2,13 @@
 name = "kindlecliprs"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Parse Kindle clippings"
 
 [dependencies]
 askama = "0.12.0"
 chrono = "0.4.24"
+clap = { version = "4.3.4", features = ["derive"] }
+dialoguer = "0.10.4"
 env_logger = "0.10.0"
 lazy_static = "1.4.0"
 log = "0.4.19"

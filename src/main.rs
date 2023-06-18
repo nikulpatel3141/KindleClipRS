@@ -1,6 +1,7 @@
-use core::panic;
+use core::{fmt, panic};
 use std::{
     collections::HashMap,
+    fmt::Display,
     fs::{self, File},
     io::Write,
     path::{Path, PathBuf},
@@ -13,6 +14,8 @@ extern crate lazy_static;
 
 use askama::Template;
 use chrono::NaiveDateTime;
+use clap::Parser;
+use dialoguer::Confirm;
 use env_logger::{self, Builder};
 use log::{info, LevelFilter};
 use regex::Regex;
@@ -61,7 +64,14 @@ struct Clipping {
     quote: String,
 }
 
-fn find_clipping_file() -> PathBuf {
+#[derive(Debug, Parser)]
+#[command(author, version, about)]
+struct Cli {
+    #[arg(short, long)]
+    file: Option<String>,
+}
+
+fn find_clipping_file() -> Option<PathBuf> {
     let find_kindle_mount_command = "/usr/bin/env";
 
     let shell_output = Command::new(find_kindle_mount_command)
@@ -71,18 +81,19 @@ fn find_clipping_file() -> PathBuf {
         .output()
         .expect("Failed to find Kindle mount point");
 
-    assert!(shell_output.status.success());
+    if !shell_output.status.success() {
+        info!("Found no Kindles mounted on the system");
+        return None;
+    }
 
     let mount_points: Vec<String> = String::from_utf8_lossy(&shell_output.stdout)
+        .trim()
         .split("\n")
         .map(|x| x.trim().to_string())
         .filter(|x| x.len() > 0)
         .collect();
 
-    println!("{}, {}", mount_points.clone().join(" "), mount_points.len());
-
     let mount_point = match mount_points.len() {
-        0 => panic!("Found no Kindles mounted on the system"),
         1 => {
             info!("Found a Kindle mounted on {}", mount_points[0]);
             mount_points[0].clone()
@@ -92,14 +103,13 @@ fn find_clipping_file() -> PathBuf {
 
     let clipping_file = Path::new(mount_point.as_str()).join(CLIPPING_FILE);
 
-    assert!(clipping_file.is_file());
-    info!("Found clippings file {}", clipping_file.display());
+    assert!(
+        clipping_file.is_file(),
+        "Kindle mount found but {} is not a file",
+        clipping_file.display()
+    );
 
-    clipping_file
-}
-
-fn parse_command_line_args() -> () {
-    // Need option to pass custom clippings file, otherwise use find_clipping_file
+    Some(clipping_file)
 }
 
 fn parse_optional_int(capture_group: Option<regex::Match>) -> Option<i32> {
@@ -222,14 +232,51 @@ fn write_parsed_clippings(parsed_clippings: Vec<Clipping>) -> Result<(), std::io
     return Ok(());
 }
 
-fn main() {
-    Builder::new().filter_level(LevelFilter::Info).init(); // FIXME: improve logging format
+fn confirm_found_clipping_file(clipping_file: PathBuf) -> Option<PathBuf> {
+    let mut clipping_file_prompt = Confirm::new();
 
-    let clipping_file = find_clipping_file();
+    clipping_file_prompt
+        .with_prompt(format!(
+            "Found clippings file {}, do you want to continue?",
+            clipping_file.display()
+        ))
+        .default(true)
+        .wait_for_newline(true);
 
-    let contents = fs::read_to_string(clipping_file).expect("Unable to read input file");
+    if clipping_file_prompt.interact().unwrap() {
+        Some(clipping_file)
+    } else {
+        None
+    }
+}
+
+fn main() -> Result<(), ()> {
+    Builder::new().filter_level(LevelFilter::Info).init(); // TODO: improve logging format
+
+    let cli = Cli::parse();
+
+    let clipping_file = match cli.file {
+        Some(x) => Path::new(x.as_str()).into(),
+        None => {
+            info!("Attempting to find a clipping file from any mounted Kindles");
+            match find_clipping_file() {
+                Some(x) => match confirm_found_clipping_file(x) {
+                    Some(y) => y,
+                    None => return Ok(()),
+                },
+                None => panic!("No clippings files detected, exiting!"),
+            }
+        }
+    };
+
+    let contents = fs::read_to_string(clipping_file.clone())
+        .unwrap_or_else(|_| panic!("Unable to read input file {}", clipping_file.display()));
+
+    if contents.trim().len() == 0 {}
 
     let parsed_clippings = parse_clippings(contents);
 
     write_parsed_clippings(parsed_clippings).expect("Unable to write clippings");
+
+    Ok(())
 }
