@@ -49,7 +49,7 @@ enum ClippingType {
 }
 
 #[derive(Debug, Template, Clone)]
-#[template(path = "quote_template.md")]
+#[template(path = "clipping_template.md")]
 struct Clipping {
     title: String,
     author: String,
@@ -73,7 +73,7 @@ fn find_clipping_file() -> Option<PathBuf> {
     let shell_output = Command::new(find_kindle_mount_command)
         .arg("bash")
         .arg("-c")
-        .arg("cat /proc/mounts | awk '{print $2}' | grep Kindle")
+        .arg("df | awk '{print $NF}' | tail -n +2 | grep Kindle")
         .output()
         .expect("Failed to find Kindle mount point");
 
