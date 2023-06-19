@@ -2,7 +2,7 @@
 
 # Usage
 
-```
+```bash
 # checks for mounted Kindles, outputs to clippings/
 kindlecliprs
 
@@ -32,6 +32,11 @@ Think Again (Grant, Adam)
 
 Remember this
 ==========
+The Infinite Game (Sinek, Simon)
+- Your Highlight on page 164 | location 2356-2358 | Added on Friday, 2 May 2023 22:57:21
+
+An infinite mindset embraces abundance whereas a finite mindset operates with a scarcity mentality.
+==========
 ```
 
 ## Output
@@ -40,31 +45,33 @@ This script uses [askama](https://github.com/djc/askama/tree/main) to render the
 
 It will output the parsed clippings into separate files:
 
-```
-i I  ~/D/P/K/kindlecliprs master• > tail -n +1 clippings/*
-==> clippings/Pragmatic Programmer, The - Thomas, David.md <==
-- *Highlight* (page: 162)
-`Every time you find yourself doing something repetitive, get into the habit of thinking “there must be a better way.” Then find it.`
-
-==> clippings/The Infinite Game - Sinek, Simon.md <==
-- *Bookmark* (page: 153)
-``
-
-==> clippings/Think Again - Grant, Adam.md <==
-- *Note* (page: 169)
-`Remember this`
-```
-
-```
+```bash
 $ kindlecliprs
 [2023-06-19T19:13:23Z INFO  kindlecliprs] Attempting to find a clipping file from any mounted Kindles
 [2023-06-19T19:13:23Z INFO  kindlecliprs] Found a Kindle mounted on /media/nikul/Kindle
 Found clippings file /media/nikul/Kindle/documents/My Clippings.txt, do you want to continue? yes
-````
+...
+$ cd clippings/
+$ tail -n +1 *
+==> Pragmatic Programmer, The - Thomas, David.md <==
+- *Highlight* (page: 162)
+`Every time you find yourself doing something repetitive, get into the habit of thinking “there must be a better way.” Then find it.`
+
+==> The Infinite Game - Sinek, Simon.md <==
+- *Bookmark* (page: 153)
+``
+
+- *Highlight* (page: 164)
+`An infinite mindset embraces abundance whereas a finite mindset operates with a scarcity mentality.`
+
+==> Think Again - Grant, Adam.md <==
+- *Note* (page: 169)
+`Remember this`
+```
 
 # About
 
-This was a small project for me to learn Rust.
+I wanted to improve my Rust and add functionality to [this](https://github.com/robertmartin8/KindleClippings) great project (which heavily inspired this one).
 
 
 
