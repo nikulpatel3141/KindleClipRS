@@ -1,20 +1,21 @@
 
-
 # Usage
 
+Running the binary will output parsed clippings to `clippings/`
+
 ```bash
-# checks for mounted Kindles, outputs to clippings/
-kindlecliprs
-
+# detect mounted Kindles - only on Linux/MacOs
+$ kindlecliprs
+...
+ 
 # if that doesn't work point it to your clippings file
-kindlecliprs -f /path/to/My\ Clippings.txt
+$ kindlecliprs -f /path/to/My\ Clippings.txt
+...
 ```
-
-The first version should work on Linux and MacOS; it checks for mounted Kindles using `df` and then prompts for confirmation before parsing.
 
 ## Input
 
-Kindles store highlights, notes and bookmarks in `My Clippings.txt` files which can be parsed:
+Kindles store highlights, notes and bookmarks in `My Clippings.txt` files eg:
 
 ```
 The Infinite Game (Sinek, Simon)
@@ -41,7 +42,7 @@ An infinite mindset embraces abundance whereas a finite mindset operates with a 
 
 ## Output
 
-This script uses [askama](https://github.com/djc/askama/tree/main) to render the [template](/templates/quote_template.md) file. The template is based on [Jinja](https://jinja.palletsprojects.com/) which is highly customisable, but the script must be recompiled after changing the template because it becomes part of the code via a Rust macro.
+This script parses the clippings file into a `Clipping` struct and renders the fields using a [Jinja](https://jinja.palletsprojects.com/) [template](/templates/clipping_template.md) via [askama](https://github.com/djc/askama/tree/main).
 
 It will output the parsed clippings into separate files:
 
