@@ -263,7 +263,7 @@ fn main() -> Result<(), ()> {
     let clipping_file = match cli.file {
         Some(x) => Path::new(x.as_str()).into(),
         None => {
-            info!("Attempting to find a clipping file from any mounted Kindles");
+            info!("No clipping file passed, attempting to find one from a mounted Kindle");
             match find_clipping_file() {
                 Some(x) => match confirm_found_clipping_file(x) {
                     Some(y) => y,
@@ -272,7 +272,7 @@ fn main() -> Result<(), ()> {
                 None => {
                     error!(
                         "No clippings files detected, mount a Kindle device \
-                        or explicitly pass a clippings file to parse"
+                        or alternatively explicitly pass a clippings file using -f"
                     );
                     return Err(());
                 }

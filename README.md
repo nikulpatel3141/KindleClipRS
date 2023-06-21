@@ -1,7 +1,7 @@
 
 # Usage
 
-Running the binary will output parsed clippings to `clippings/`
+Running the release binary for your system will output parsed clippings to `clippings/`
 
 ```bash
 # detect mounted Kindles - only on Linux/MacOs
@@ -12,6 +12,8 @@ $ kindlecliprs
 $ kindlecliprs -f /path/to/My\ Clippings.txt
 ...
 ```
+
+Alternatively you can use `cargo run`, or `cargo run -- -f ...` if you have [rust](https://www.rust-lang.org/tools/install) installed.
 
 ## Input
 
@@ -42,7 +44,7 @@ An infinite mindset embraces abundance whereas a finite mindset operates with a 
 
 ## Output
 
-This script parses the clippings file into a `Clipping` struct and renders the fields using a [Jinja](https://jinja.palletsprojects.com/) [template](/templates/clipping_template.md) via [askama](https://github.com/djc/askama/tree/main).
+This script parses the clippings file into `Clipping` structs and renders them using a [Jinja](https://jinja.palletsprojects.com/) [template](/templates/clipping_template.md).
 
 It will output the parsed clippings into separate files:
 
@@ -70,9 +72,18 @@ $ tail -n +1 *
 `Remember this`
 ```
 
+## Clipping Formatting
+
+The [template](/templates/clipping_template.md) file determines how the `Quote` structs are rendered at compile time. The template becomes part of the code via a Rust macro. See [askama](https://github.com/djc/askama/tree/main) for more details.
+
+The upside of this is we get compile time checks for template validity, but you'll need to recompile when wanting to change the template.
+
+
 # About
 
-I wanted to improve my Rust and add functionality to [this](https://github.com/robertmartin8/KindleClippings) great project (which heavily inspired this one).
+This project is based on [this](https://github.com/robertmartin8/KindleClippings) great one and is a means for me to improve my Rust. I've definitely learned a lot through this project, though I've still got a long way to go. Please reach out with feedback if you have any!
 
+# TODO
 
-
+- Upload to [crates.io](crates.io)
+- Add logic to remove deleted highlights
