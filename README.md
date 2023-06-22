@@ -1,7 +1,7 @@
 
 Split your Kindle Highlights, Notes and Bookmarks to plain text files.
 
-There are [many](https://github.com/topics/kindle-clippings) existing solutions for this, though none of the ones I've seen easily let you [change the output formatting](#clipping-formatting)..
+There are [many](https://github.com/topics/kindle-clippings) existing solutions for this, though none of the ones I've seen easily let you [change the output formatting](#clipping-formatting).
 
 ![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
 
@@ -26,11 +26,9 @@ $ cargo run -- -f /path/to/My\ Clippings.txt
 ...
 ```
 
-Alternatively you can use `cargo run`, or `cargo run -- -f ...` if you have [Rust](https://www.rust-lang.org/tools/install) installed.
-
 ### Input
 
-Kindles store highlights, notes and bookmarks in `My Clippings.txt` files eg:
+Kindles store highlights, notes and bookmarks in `My Clippings.txt` files, eg:
 
 ```
 The Infinite Game (Sinek, Simon)
@@ -85,16 +83,18 @@ $ tail -n +1 *
 `Remember this`
 ```
 
-### Clipping Formatting
+## Clipping Formatting
 
 The [template](/templates/clipping_template.md) file determines how the `Quote` structs are rendered at compile time. The template becomes part of the code via a Rust macro. See [askama](https://github.com/djc/askama/tree/main) for more details.
 
-The upside of this is template validity is checked at compile time, but you'll need to recompile when you want to change the template.
+An upside is template validity is checked at compile time, but you'll need to recompile the script when you want to change the template.
 
 
 ## About
 
-This project is based on [this](https://github.com/robertmartin8/KindleClippings) great one and is a means for me to improve my Rust. I've definitely learned a lot through this project, though I've still got a long way to go. Please reach out with feedback if you have any!
+This project was inspired by [this](https://github.com/robertmartin8/KindleClippings) neat one and is a means for me to improve my Rust.
+
+Please reach out with feedback if you have any!
 
 ## TODO
 
