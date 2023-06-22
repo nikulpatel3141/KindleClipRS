@@ -1,21 +1,35 @@
 
-# Usage
+Split your Kindle Highlights, Notes and Bookmarks to plain text files by book.
+
+This intends to be a simple script that lets you (somewhat) easily change the output format to your liking: you just need to edit the [template](/templates/clipping_template.md) file (although you do need Rust installed to recompile).
+
+
+![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
+
+## Usage
 
 Running the release binary for your system will output parsed clippings to `clippings/`
 
 ```bash
-# detect mounted Kindles - only on Linux/MacOs
+# detect mounted Kindles - only on Linux/MacOS
 $ kindlecliprs
 ...
  
 # if that doesn't work point it to your clippings file
 $ kindlecliprs -f /path/to/My\ Clippings.txt
 ...
+
+# or run from source
+$ git clone https://github.com/nikulpatel3141/KindleClipRS
+...
+$ cd KindleClipRS
+$ cargo run -- -f /path/to/My\ Clippings.txt
+...
 ```
 
-Alternatively you can use `cargo run`, or `cargo run -- -f ...` if you have [rust](https://www.rust-lang.org/tools/install) installed.
+Alternatively you can use `cargo run`, or `cargo run -- -f ...` if you have [Rust](https://www.rust-lang.org/tools/install) installed.
 
-## Input
+### Input
 
 Kindles store highlights, notes and bookmarks in `My Clippings.txt` files eg:
 
@@ -42,7 +56,7 @@ An infinite mindset embraces abundance whereas a finite mindset operates with a 
 ==========
 ```
 
-## Output
+### Output
 
 This script parses the clippings file into `Clipping` structs and renders them using a [Jinja](https://jinja.palletsprojects.com/) [template](/templates/clipping_template.md).
 
@@ -72,19 +86,19 @@ $ tail -n +1 *
 `Remember this`
 ```
 
-## Clipping Formatting
+### Clipping Formatting
 
 The [template](/templates/clipping_template.md) file determines how the `Quote` structs are rendered at compile time. The template becomes part of the code via a Rust macro. See [askama](https://github.com/djc/askama/tree/main) for more details.
 
 The upside of this is template validity is checked at compile time, but you'll need to recompile when you want to change the template.
 
 
-# About
+## About
 
 This project is based on [this](https://github.com/robertmartin8/KindleClippings) great one and is a means for me to improve my Rust. I've definitely learned a lot through this project, though I've still got a long way to go. Please reach out with feedback if you have any!
 
-# TODO
+## TODO
 
-- Upload to [crates.io](crates.io)
+- Upload to [crates.io](https://crates.io/)
 - Add logic to remove deleted highlights
 - Write tests
