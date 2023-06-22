@@ -1,8 +1,7 @@
 
-Split your Kindle Highlights, Notes and Bookmarks to plain text files by book.
+Split your Kindle Highlights, Notes and Bookmarks to plain text files.
 
-This intends to be a simple script that lets you (somewhat) easily change the output format to your liking: you just need to edit the [template](/templates/clipping_template.md) file (although you do need Rust installed to recompile).
-
+There are [many](https://github.com/topics/kindle-clippings) existing solutions for this, though none of the ones I've seen easily let you [change the output formatting](#clipping-formatting)..
 
 ![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
 
