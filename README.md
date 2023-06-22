@@ -76,7 +76,7 @@ $ tail -n +1 *
 
 The [template](/templates/clipping_template.md) file determines how the `Quote` structs are rendered at compile time. The template becomes part of the code via a Rust macro. See [askama](https://github.com/djc/askama/tree/main) for more details.
 
-The upside of this is we get compile time checks for template validity, but you'll need to recompile when wanting to change the template.
+The upside of this is template validity is checked at compile time, but you'll need to recompile when you want to change the template.
 
 
 # About
@@ -87,3 +87,4 @@ This project is based on [this](https://github.com/robertmartin8/KindleClippings
 
 - Upload to [crates.io](crates.io)
 - Add logic to remove deleted highlights
+- Write tests
