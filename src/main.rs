@@ -41,7 +41,7 @@ lazy_static! {
     static ref FILENAME_SANITISE_REGEX: Regex = Regex::new(r#"[/?<>\:*|\"]"#).unwrap();
 }
 
-#[derive(Debug, EnumString, Display, Clone, Copy)]
+#[derive(Debug, EnumString, Display, Clone, Copy, PartialEq)]
 enum ClippingType {
     Bookmark,
     Highlight,
@@ -54,7 +54,7 @@ struct Clipping {
     title: String,
     author: String,
     clipping_type: ClippingType,
-    location: Option<(i32, i32)>,
+    location: Option<i32>,
     page: Option<i32>,
     added_date: Option<NaiveDateTime>,
     quote: String,
@@ -133,15 +133,7 @@ fn parse_quote_block(quote_block: &str) -> Result<Clipping, ()> {
     let added_date = parse_highlight_time(&book_captures["dateStr"]);
 
     let page = parse_optional_int(book_captures.name("page"));
-
-    let loc_start = parse_optional_int(book_captures.name("locStart"));
-    let loc_end = parse_optional_int(book_captures.name("locEnd"));
-
-    let location = if loc_start.is_some() && loc_end.is_some() {
-        Some((loc_start.unwrap(), loc_end.unwrap()))
-    } else {
-        None
-    };
+    let location = parse_optional_int(book_captures.name("locStart"));
 
     let quote = match book_captures.name("quote") {
         Some(x) => x.as_str().into(),

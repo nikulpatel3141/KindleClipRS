@@ -69,26 +69,38 @@ $ cd clippings/
 $ tail -n +1 *
 ==> Pragmatic Programmer, The - Thomas, David.md <==
 - *Highlight* (page: 162)
-`Every time you find yourself doing something repetitive, get into the habit of thinking “there must be a better way.” Then find it.`
+  > Every time you find yourself doing something repetitive, get into the habit of thinking “there must be a better way.” Then find it.
 
+---
 ==> The Infinite Game - Sinek, Simon.md <==
 - *Bookmark* (page: 153)
-``
+  > 
 
+---
 - *Highlight* (page: 164)
-`An infinite mindset embraces abundance whereas a finite mindset operates with a scarcity mentality.`
+  > An infinite mindset embraces abundance whereas a finite mindset operates with a scarcity mentality.
 
+---
 ==> Think Again - Grant, Adam.md <==
 - *Note* (page: 169)
-`Remember this`
+  > Remember this
+
+---
 ```
 
 ## Clipping Formatting
 
-The [template](/templates/clipping_template.md) file determines how the `Quote` structs are rendered at compile time. The template becomes part of the code via a Rust macro. See [askama](https://github.com/djc/askama/tree/main) for more details.
+The [template](/templates/clipping_template.md) file can be simplified if you only care about quotes. See [askama](https://github.com/djc/askama/tree/main) for more details on template syntax.
 
-An upside is template validity is checked at compile time, but you'll need to recompile the script when you want to change the template.
+```
+{%- if clipping_type == ClippingType::Highlight -%}
+> {{ quote }}
 
+---
+{%~ endif -%}
+```
+
+You'll need to recompile on template changes since the template becomes part of the code via a [Rust macro](https://doc.rust-lang.org/book/ch19-06-macros.html).
 
 ## About
 
